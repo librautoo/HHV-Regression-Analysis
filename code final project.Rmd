@@ -1,0 +1,580 @@
+---
+title: "STAT5205 Final Project"
+author: "Tingjun Kang, Yuhao Wang, Linke Wu"
+date: "15 December 2023"
+output:
+  pdf_document: default
+  latex_engine: xelatex
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse) 
+library(car)
+library(MASS)
+wholecoal <- read_csv("coal_hhv.csv")
+# Load the tidyverse package so it is available to use
+# Load the Car package so it is available to use
+# Import data from document
+```
+
+
+## EDA for total data
+
+```{r}
+newcoal <- wholecoal %>%
+  filter(!is.na(Ash_wt) & !is.na(Moisture_wt) & !is.na(Volatile_Matter_wt) & !is.na(Fixed_Carbon_wt) & !is.na(HHV))
+# Data cleaning
+# Remove missing values on each value
+```
+
+```{r}
+glimpse(newcoal)
+summary(newcoal)
+# Numerical summaries of each variable
+```
+```{r}
+IQR(newcoal$Moisture_wt)
+IQR(newcoal$Ash_wt)
+IQR(newcoal$Volatile_Matter_wt)
+IQR(newcoal$Fixed_Carbon_wt)
+IQR(newcoal$HHV)
+# Calculate IQR of each variable
+```
+```{r}
+sd(newcoal$Moisture_wt)
+sd(newcoal$Ash_wt)
+sd(newcoal$Volatile_Matter_wt)
+sd(newcoal$Fixed_Carbon_wt)
+sd(newcoal$HHV)
+# Calculate standard deviation of each variable
+```
+```{r}
+ggplot(data = newcoal, aes(x=HHV)) +
+  geom_histogram(fill="coral2",color="grey",bins = 20) +
+  labs(x="Higher Heating Value", title = "Histogram of HHV")
+# Create a histogram for Higher Heating Value
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Moisture_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Moisture", y="Higher Heating Value",title = "Higher Heating Value with Moisture")
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Ash_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Ash", y="Higher Heating Value",title = "Higher Heating Value with Ash")
+```
+```{r}
+ggplot(data=newcoal, aes(x=Volatile_Matter_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Volatile Matter", y="Higher Heating Value",title = "Higher Heating Value with Volatile Matter")
+```
+```{r}
+ggplot(data=newcoal, aes(x=Fixed_Carbon_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Fixed Carbon", y="Higher Heating Value",title = "Higher Heating Value with Fixed Carbon")
+```
+
+##Divide data into training set and testing set:
+
+```{r}
+set.seed(923)
+# Create the traning and test set
+```
+
+```{r}
+n <- nrow(wholecoal)
+# record the number of observations in dataset
+```
+
+```{r}
+train_ind <- sample(1:n, size = round(0.8*n))
+# choosing 80% observations as training in random
+```
+
+```{r}
+train <- wholecoal %>% filter(No.coal %in% train_ind)
+# Create a training set
+```
+
+```{r}
+test <- wholecoal %>% filter(!(No.coal %in% train_ind))
+# Create a testing set
+```
+
+##Processing EDA of training set:
+
+```{r}
+newcoal <- train %>%
+  filter(!is.na(Ash_wt) & !is.na(Moisture_wt) & !is.na(Volatile_Matter_wt) & !is.na(Fixed_Carbon_wt) & !is.na(HHV))
+# Data cleaning
+# Remove missing values on each value
+```
+
+```{r}
+glimpse(newcoal)
+summary(newcoal)
+# Numerical summaries of each variable
+```
+
+```{r}
+IQR(newcoal$Moisture_wt)
+IQR(newcoal$Ash_wt)
+IQR(newcoal$Volatile_Matter_wt)
+IQR(newcoal$Fixed_Carbon_wt)
+IQR(newcoal$HHV)
+# Calculate IQR of each variable
+```
+
+```{r}
+sd(newcoal$Moisture_wt)
+sd(newcoal$Ash_wt)
+sd(newcoal$Volatile_Matter_wt)
+sd(newcoal$Fixed_Carbon_wt)
+sd(newcoal$HHV)
+# Calculate standard deviation of each variable
+```
+
+```{r}
+ggplot(data = newcoal, aes(x=HHV)) +
+  geom_histogram(fill="coral2",color="grey",bins = 20) +
+  labs(x="Higher Heating Value", title = "Histogram of HHV")
+# Create a histogram for Higher Heating Value
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Moisture_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Moisture", y="Higher Heating Value",title = "Higher Heating Value with Moisture")
+# Create a scatter plots between "HHV" and "Moisture"
+
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Ash_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Ash", y="Higher Heating Value",title = "Higher Heating Value with Ash")
+# Create a scatter plots between "HHV" and "Ash_wt"
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Volatile_Matter_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Volatile Matter", y="Higher Heating Value",title = "Higher Heating Value with Volatile Matter")
+# Create a scatter plots between "HHV" and "Volatile_Matter_wt"
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Fixed_Carbon_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Fixed Carbon", y="Higher Heating Value",title = "Higher Heating Value with Fixed Carbon")
+# Create a scatter plots between "HHV" and "Fixed_Carbon_wt"
+```
+
+
+##Model buliding:
+
+```{r}
+full_model <- lm(HHV ~ Moisture_wt+Fixed_Carbon_wt+Volatile_Matter_wt+Ash_wt,data=train)
+vif(full_model)
+# Bulid the full_model with all predictors 
+# Check VIF then decide which predictor needs removed 
+```
+
+
+```{r}
+model_1 <- lm(HHV~Ash_wt+Fixed_Carbon_wt+Volatile_Matter_wt,data=train)
+vif(model_1)
+# Remove the "Moisture_wt" since it has the largest VIF
+# Bulid model_1 then calcuate VIF
+```
+
+```{r}
+summary(model_1)
+# Select model_1 as the manual selected model
+```
+
+
+```{r}
+stepAIC(full_model,direction = "both",k=2)
+# Use automated stepwise selection to reduce full model
+```
+
+```{r}
+model_2 <- lm(HHV ~ Ash_wt + Fixed_Carbon_wt + Moisture_wt,data=train)
+summary(model_2)
+vif(model_2)
+# Bulid model_2 based on automated stepwise selected model
+```
+
+
+
+```{r}
+select_criteria = function(model, n)
+{
+  SSres <- sum(model$residuals^2)
+  Rsq_adj <- summary(model)$adj.r.squared
+  p <- length(model$coefficients) - 1
+  AIC <- n*log(SSres/n) + 2*p
+  AICc <- AIC + (2*(p+2)*(p+3)/(n-p-1))
+  BIC <- n*log(SSres/n) + (p+2)*log(n)
+  res <- c(SSres, Rsq_adj, AIC, AICc, BIC)
+  names(res) <- c("SSres", "Rsq_adj", "AIC", "AIC_c", "BIC")
+  return(res)
+}
+select_criteria(model_1,40)
+select_criteria(model_2,40)
+#compare manual selected model and automated stepwise selected model
+```
+
+##Model diagnostics:
+#For model_1
+
+```{r}
+pairs(~ Fixed_Carbon_wt + Volatile_Matter_wt + Ash_wt,data=train,main="Pair Plots of Predictors for Model_1")
+# Check multicollinearity with pair plots of predictors for model_1
+```
+
+
+#For model_2
+
+```{r}
+pairs(~ Moisture_wt + Fixed_Carbon_wt + Ash_wt,data=train,main="Pair Plots of Predictors for Model_2")
+# Check multicollinearity with pair plots of predictors for model_2
+```
+
+##Check residual plot and residual Q-Q plot:
+#For model_1
+```{r}
+Res <- rstandard(model_1)
+Fit <- fitted(model_1)
+plot(Res~Fit,main="Residual vs fitted value for model_1")
+# Residual vs fitted value for model_1
+```
+
+```{r}
+par(mfrow = c(1,3))
+plot(Res~train$Ash_wt,xlab="Ash_wt",main="Residual vs Ash_wt")
+plot(Res~train$Fixed_Carbon_wt, xlab="Fixed_Carbon_wt",main="Residual vs Fixed_Carbon_wt")
+plot(Res~train$Volatile_Matter_wt, xlab="Volatile_Matter_wt",main="Residual vs Volatile_Matter_wt")
+# Residual vs Predictors for model_1
+```
+
+```{r}
+qqnorm(Res)
+qqline(Res)
+# Residual Q-Q plot for model_1
+```
+
+#For model_2
+```{r}
+Residuals <- rstandard(model_2)
+Fitted <- fitted(model_2)
+plot(Residuals~Fitted,main="Residual vs fitted value for model_2")
+# Residual vs fitted value for model_2
+```
+
+```{r}
+par(mfrow = c(1,3))
+plot(Residuals~train$Ash_wt,xlab="Ash_wt",main="Residual vs Ash_wt")
+plot(Residuals~train$Fixed_Carbon_wt, xlab="Fixed_Carbon_wt",main="Residual vs Fixed_Carbon_wt")
+plot(Residuals~train$Moisture_wt, xlab="Moisture_wt",main="Residual vs Moisture_wt")
+# Residual vs Predictors for model_2
+```
+
+```{r}
+qqnorm(Residuals)
+qqline(Residuals)
+# Residual Q-Q plot for model_2
+```
+
+##Determine the Leverage points, outliers,influential points:
+#For model_1
+```{r}
+h <- hatvalues(model_1)
+threshold <- 2*(length(model_1$coefficients)/nrow(train))
+L <- which(h > threshold)
+train[L,]
+# Determine whether there are Leverage points
+```
+
+```{r}
+std_res <- rstandard(model_1)
+O <- which(abs(std_res)>2)
+train[O,]
+# Determine whether there are outliers
+```
+
+```{r}
+D <- cooks.distance(model_1)
+cutoff <- qf(0.5, length(model_1$coefficients), nrow(train)-length(model_1$coefficients), lower.tail=T)
+I <- which(D > cutoff)
+train[I,]
+# Determine whether there are influential points
+```
+
+#For model_2
+```{r}
+h <- hatvalues(model_2)
+threshold <- 2*(length(model_2$coefficients)/nrow(train))
+L <- which(h > threshold)
+train[L,]
+# Determine whether there are Leverage points
+```
+
+```{r}
+std_res <- rstandard(model_2)
+O <- which(abs(std_res)>2)
+train[O,]
+# Determine whether there are outliers
+```
+
+```{r}
+D <- cooks.distance(model_2)
+cutoff <- qf(0.5, length(model_2$coefficients), nrow(train)-length(model_2$coefficients), lower.tail=T)
+I <- which(D > cutoff)
+train[I,]
+# Determine whether there are influential points
+```
+
+##Model Validation2:
+
+#Processing EDA of testing set:(compare EDA)
+
+```{r}
+newcoal <- test %>%
+  filter(!is.na(Ash_wt) & !is.na(Moisture_wt) & !is.na(Volatile_Matter_wt) & !is.na(Fixed_Carbon_wt) & !is.na(HHV))
+# Data cleaning
+# Remove missing values on each value
+```
+
+```{r}
+glimpse(newcoal)
+summary(newcoal)
+# Numerical summaries of each variable
+```
+
+```{r}
+IQR(newcoal$Moisture_wt)
+IQR(newcoal$Ash_wt)
+IQR(newcoal$Volatile_Matter_wt)
+IQR(newcoal$Fixed_Carbon_wt)
+IQR(newcoal$HHV)
+# Calculate IQR of each variable
+```
+
+```{r}
+sd(newcoal$Moisture_wt)
+sd(newcoal$Ash_wt)
+sd(newcoal$Volatile_Matter_wt)
+sd(newcoal$Fixed_Carbon_wt)
+sd(newcoal$HHV)
+# Calculate standard deviation of each variable
+```
+
+```{r}
+ggplot(data = newcoal, aes(x=HHV)) +
+  geom_histogram(fill="coral2",color="grey",bins = 20) +
+  labs(x="Higher Heating Value", title = "Histogram of HHV")
+# Create a histogram for Higher Heating Value
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Moisture_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Moisture", y="Higher Heating Value",title = "Higher Heating Value with Moisture")
+# Create a scatter plots between "HHV" and "Moisture"
+
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Ash_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Ash", y="Higher Heating Value",title = "Higher Heating Value with Ash")
+# Create a scatter plots between "HHV" and "Ash_wt"
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Volatile_Matter_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Volatile Matter", y="Higher Heating Value",title = "Higher Heating Value with Volatile Matter")
+# Create a scatter plots between "HHV" and "Volatile_Matter_wt"
+```
+
+```{r}
+ggplot(data=newcoal, aes(x=Fixed_Carbon_wt, y=HHV)) +
+  geom_point() +
+  geom_smooth(method = lm,se=FALSE) +
+  labs(x="Fixed Carbon", y="Higher Heating Value",title = "Higher Heating Value with Fixed Carbon")
+# Create a scatter plots between "HHV" and "Fixed_Carbon_wt"
+```
+
+#Refit 2 models on testing data
+
+```{r}
+model_1_test <- lm(HHV~Ash_wt+Fixed_Carbon_wt+Volatile_Matter_wt,data=test)
+summary(model_1_test)
+# Refit model_1 with testing data
+```
+
+```{r}
+model_2_test <- lm(HHV ~ Ash_wt + Fixed_Carbon_wt + Moisture_wt,data=test)
+summary(model_2_test)
+# Refit model_2 with testing data
+```
+
+#check 2 new models residual plot and residual Q-Q plot:
+#For model_1_test
+```{r}
+Res <- rstandard(model_1_test)
+Fit <- fitted(model_1_test)
+plot(Res~Fit,main="Residual vs fitted value for model_1_test")
+# Residual vs fitted value for model_1_test
+```
+
+```{r}
+par(mfrow = c(1,3))
+plot(Res~test$Ash_wt,xlab="Ash_wt",main="Residual vs Ash_wt")
+plot(Res~test$Fixed_Carbon_wt, xlab="Fixed_Carbon_wt",main="Residual vs Fixed_Carbon_wt")
+plot(Res~test$Volatile_Matter_wt, xlab="Volatile_Matter_wt",main="Residual vs Volatile_Matter_wt")
+# Residual vs Predictors for model_1_test
+```
+
+```{r}
+qqnorm(Res)
+qqline(Res)
+# Residual Q-Q plot for model_1_test
+```
+
+#For model_2_test
+```{r}
+Residuals <- rstandard(model_2_test)
+Fitted <- fitted(model_2_test)
+plot(Residuals~Fitted,main="Residual vs fitted value for model_2_test")
+# Residual vs fitted value for model_2_test
+```
+
+```{r}
+par(mfrow = c(1,3))
+plot(Residuals~test$Ash_wt,xlab="Ash_wt",main="Residual vs Ash_wt")
+plot(Residuals~test$Fixed_Carbon_wt, xlab="Fixed_Carbon_wt",main="Residual vs Fixed_Carbon_wt")
+plot(Residuals~test$Moisture_wt, xlab="Moisture_wt",main="Residual vs Moisture_wt")
+# Residual vs Predictors for model_2_test
+```
+
+```{r}
+qqnorm(Residuals)
+qqline(Residuals)
+# Residual Q-Q plot for model_2_test
+```
+
+##Determine the Leverage points, outliers,influential points of 2 new model:
+#For model_1_test
+```{r}
+h <- hatvalues(model_1_test)
+threshold <- 2*(length(model_1_test$coefficients)/nrow(test))
+L <- which(h > threshold)
+train[L,]
+# Determine whether there are Leverage points
+```
+
+```{r}
+std_res <- rstandard(model_1_test)
+O <- which(abs(std_res)>2)
+train[O,]
+# Determine whether there are outliers
+```
+
+```{r}
+D <- cooks.distance(model_1_test)
+cutoff <- qf(0.5, length(model_1_test$coefficients), nrow(test)-length(model_1_test$coefficients), lower.tail=T)
+I <- which(D > cutoff)
+train[I,]
+# Determine whether there are influential points
+```
+
+#For model_2_test
+```{r}
+h <- hatvalues(model_2_test)
+threshold <- 2*(length(model_2_test$coefficients)/nrow(test))
+L <- which(h > threshold)
+train[L,]
+# Determine whether there are Leverage points
+```
+
+```{r}
+std_res <- rstandard(model_2_test)
+O <- which(abs(std_res)>2)
+train[O,]
+# Determine whether there are outliers
+```
+
+```{r}
+D <- cooks.distance(model_2_test)
+cutoff <- qf(0.5, length(model_2_test$coefficients), nrow(test)-length(model_2_test$coefficients), lower.tail=T)
+I <- which(D > cutoff)
+train[I,]
+# Determine whether there are influential points
+```
+
+##calculate Adj.R^2 and AIC,BIC for testing model
+```{r}
+select_criteria = function(model, n)
+{
+  SSres <- sum(model$residuals^2)
+  Rsq_adj <- summary(model)$adj.r.squared
+  p <- length(model$coefficients) - 1
+  AIC <- n*log(SSres/n) + 2*p
+  AICc <- AIC + (2*(p+2)*(p+3)/(n-p-1))
+  BIC <- n*log(SSres/n) + (p+2)*log(n)
+  res <- c(SSres, Rsq_adj, AIC, AICc, BIC)
+  names(res) <- c("SSres", "Rsq_adj", "AIC", "AIC_c", "BIC")
+  return(res)
+}
+select_criteria(model_1_test,7)
+select_criteria(model_2_test,7)
+#calculate ADJ.R^2 and AIC,BIC for testing model
+```
+
+
+
+#Final model and Data prediction:
+
+```{r}
+# Choose model_2 and do the prediction
+prediction <- predict(model_2,test)
+prediction
+sum((prediction-test$HHV)^2)
+# Calculate sse of prediction
+```
+
+
+```{r}
+# Choose model_1 and do the prediction
+prediction <- predict(model_1,test)
+prediction 
+sum((prediction-test$HHV)^2)
+# Calculate sse of prediction
+```
+ 
+##Choose model_1 as the final model
+
